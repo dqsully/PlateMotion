@@ -42,10 +42,6 @@
     }
 
     function ready() {
-      document.body.style.overflow = 'hidden';
-      scrollwidth = width(document.body);
-      document.body.style.overflow = 'initial';
-      scrollwidth -= width(document.body);
       jumpto.onclick = function(e) {
         if(e.clientY - y(jumpto) <= 24) {
           if(jumptog) {
@@ -116,6 +112,10 @@
             ems[i].removeAttribute('h');
           }
         }
+        document.body.style.overflow = 'hidden';
+        scrollwidth = width(document.body);
+        document.body.style.overflow = 'initial';
+        scrollwidth -= width(document.body);
       })();
       var imgfunc = function (e) {
         var f = document.getElementById('floater');
