@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Volcanoes and Plate Motion</title>
+  <meta charset="utf-8">
+  <script>
+    function box(el) {
+      return el.getBoundingClientRect();
+    }
+    function x(el) {
+      return box(el).left;
+    }
+    function y(el) {
+      return box(el).top;
+    }
+    function width(el) {
+      return box(el).width;
+    }
+    function height(el) {
+      return box(el).height;
+    }
+    function t(el) {
+      return box(el).top;
+    }
+    function b(el) {
+      return box(el).bottom;
+    }
+    function l(el) {
+      return box(el).left;
+    }
+    function r(el) {
+      return box(el).right;
+    }
+
+    var scrollwidth;
+    var jumptog = false;
+    //Push an array containing miss element then function
+    //  If function returns false, entry stays
+    var outclicks = [];
+    function outclickpush(elem, func) {
+      outclicks.push([elem, func]);
+    }
+
+    function ready() {
+      document.body.style.overflow = 'hidden';
+      scrollwidth = width(document.body);
+      document.body.style.overflow = 'initial';
+      scrollwidth -= width(document.body);
+      jumpto.onclick = function(e) {
+        if(e.clientY - y(jumpto) <= 24) {
+          if(jumptog) {
+            //put it back
+            jumpto.style.height = '24px';
+            jumpto.className = 'a';
+            setTimeout(function() {jumpto.className = '';}, 150);
+            outclicks.pop();
+            jumptog = false;
+          } else {
+            //expand it
+            jumpto.style.height = jumpcont.clientHeight + 'px';
+            jumpto.className = 'a b';
+            setTimeout(function() {jumpto.className = 'b';}, 150);
+            jumptog = true;
+            outclickpush(jumpto, function(e) {
+              jumpto.style.height = '24px';
+              jumpto.className = 'sel o';
+              jumptog = false;
+              e.stopImmediatePropagation();
+            });
+          }
+        } else if(e.target.getAttribute('marker') !== null) {
+          window.scrollTo(0, document.getElementById(e.target.getAttribute('marker')).offsetTop - navh());
+          jumpto.style.height = '24px';
+          jumpto.className = '';
+          outclicks.pop();
+          jumptog = false;
+        }
+        e.stopPropagation();
+      };
+      var max = 0;
+      var ems = document.getElementsByClassName('g');
+      for(var i=0; i<ems.length; i++) {
+        if(width(ems[i])>max)max=width(ems[i]);
+      }
+      jumpcont.style.width = max + 27 + 'px';
+      (document.onscroll = function(e) {
+        var ty = pageYOffset / (height(document.body) + navh() - window.innerHeight) * (window.innerHeight - navh()) + navh();
+        var min = height(document.body) + navh();
+        var ems = document.getElementsByClassName('anchor');
+        var tmp;
+        var it;
+        for(var i=0; i<ems.length; i++) {
+          tmp = ty - y(ems[i]);
+          if(tmp < min && tmp >= 0) {
+            min = tmp;
+            it = ems[i];
+          }
+        }
+        jumpdisp.textContent = it.textContent;
+      })();
+      (window.onresize = function() {
+        page.style.marginTop = (navh()) + 'px';
+        jumpto.parentNode.parentNode.style.marginRight = width(author) + 25 + 'px';
+        var ems = document.getElementsByClassName('image');
+        var w = width(document.body);
+        for(var i=0; i<ems.length; i++) {
+          if(ems[i].getAttribute('h') !== null){
+            ems[i].style.width = '';
+            ems[i].style.height = ems[i].getAttribute('h');
+          }
+          if(ems[i].offsetWidth + 54 >= w) {
+            ems[i].style.width = '100%';
+            ems[i].setAttribute('h', ems[i].style.height);
+            ems[i].style.height = '';
+          } else if(ems[i].getAttribute('h') !== null) {
+            ems[i].removeAttribute('h');
+          }
+        }
+      })();
+      var imgfunc = function (e) {
+        var f = document.getElementById('floater');
+        var bg = document.getElementById('bg');
+        var b = box(e.target);
+        f.style.left = b.left + 'px';
+        f.style.top = b.top + 'px';
+        f.style.width = b.width + 'px';
+        f.style.height = b.height + 'px';
+        f.style.display = 'block';
+        f.src = e.target.src;
+        e.target.style.visibility = 'hidden';
+        bg.style.display = 'block';
+        f.className = 'moving';
+        document.body.style.overflow = 'hidden';
+        document.body.style.marginRight = scrollwidth + 'px';
+        nav.children[5].style.right = scrollwidth + 20 + 'px';
+        setTimeout(function() {
+          var t = performance.now();
+          bg.style.opacity = '1';
+          if(b.width/b.height < window.innerWidth/window.innerHeight) {
+            f.style.top = '0';
+            f.style.height = '100%';
+            f.style.left = (window.innerWidth - window.innerHeight/b.height*b.width)/2 + 'px';
+            f.style.width = (window.innerHeight/b.height*b.width) + 'px';
+          } else {
+            f.style.left = '0';
+            f.style.width = '100%';
+            f.style.top = (window.innerHeight - window.innerWidth/b.width*b.height)/2 + 'px';
+            f.style.height = (window.innerWidth/b.width*b.height) + 'px';
+          }
+          var c = document.onclick;
+          document.onclick = function() {
+            b = box(e.target);
+            bg.style.opacity = '0';
+            f.style.left = b.left + 'px';
+            f.style.top = b.top + 'px';
+            f.style.width = b.width + 'px';
+            f.style.height = b.height + 'px';
+            document.onclick = c;
+            setTimeout(function() {
+              e.target.style.visibility = '';
+              bg.style.display = 'none';
+              f.style.display = 'none';
+              f.className = '';
+              document.body.style.overflow = '';
+              document.body.style.marginRight = '';
+              nav.children[5].style.right = '';
+            }, performance.now() - t > 600 ? 600 : performance.now() - t);
+          };
+        }, 20); //Run this a frame later after the position and class effects have taken place
+      };
+      var imgs = document.getElementsByClassName('image');
+      for(var i=0; i<imgs.length; i++) {
+        if(imgs[i].parentNode.className == 'topic') {
+          imgs[i].onclick = imgfunc;
+        }
+      }
+    }
+
+    function navh() {
+      return height(nav) + 5;
+    }
+
+    document.onclick = function(e) {
+      var miss;
+      var cont = false;
+      var tmp = [];
+      do {
+        miss = outclicks.pop();
+        if(miss === undefined) break;
+        if(typeof miss == 'object' && typeof miss[0] == 'object' && typeof miss[1] == 'function') {
+          if(e.target === miss[0]) {
+            tmp.push(miss);
+          } else {
+            if(miss[1](e) === false) tmp.push(miss);
+            else cont = true;
+          }
+        }
+      } while(!cont);
+      for(var i=0; i<tmp.length; i++) {
+        outclicks.push(tmp.pop());
+      }
+    };
+  </script>
+  <style>
+    /*
+    Colors:
+    Bright: #39ED28
+    Toned Down: #3CB5311
+    Toned Down Hover: #CCF7C8
+    */
+
+    /*Body*/
+    body {
+      padding: 0;
+      margin: 0;
+      border: 0;
+      font-family: Calibri;
+    }
+    body:before {
+      content: "";
+      position: fixed;
+      top: -10px;
+      left: 0;
+      width: 100%;
+      height: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,.8);
+      z-index: 100;
+    }
+    body:after {
+      content: "";
+      position: fixed;
+      bottom: -10px;
+      left: 0;
+      width: 100%;
+      height: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,.8);
+      z-index: 100;
+    }
+    p {
+      font-size: 18px;
+      text-indent: 36px;
+    }
+    a {
+      text-decoration: none;
+      color: #3CB531;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /*Global*/
+    .r {float: right;}              /*Float right*/
+    .l {float: left;}               /*Float left*/
+    .u {                            /*Unselectable*/
+      -moz-user-select: none;
+      -ms-user-select: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .vl {                           /*Vertical line*/
+      height: 80%;
+      margin: 0 16px;
+      transform: translate(0,10%);
+      width: 1px;
+      background-color: black;
+      border-radius: 100px;
+    }
+      .vl.b {                         /*Bold*/
+        width: 2px;
+      }
+      .vl.w {                         /*White*/
+        background-color: white;
+      }
+      .vl.f {                         /*Full*/
+        height: 100%;
+        transform: translate(0,0);
+      }
+      .vl.s {                         /*Slim margins*/
+        margin: 0 4px;
+      }
+    .hl {                           /*Horizontal line*/
+      height: 1px;
+      width: 80%;
+      margin: 8px 0;
+      transform: translate(10%,0);
+      background-color: black;
+    }
+      .hl.b {                         /*Bold*/
+        height: 2px;
+      }
+      .hl.w {                         /*White*/
+        background-color: white;
+      }
+      .hl.f {                         /*Full*/
+        width: 100%;
+        transform: translate(0,0);
+      }
+      .hl.s {                         /*Slim margins*/
+        margin: 4px 0;
+      }
+    .sel {cursor: pointer;}         /*Link cursor*/
+    .cur {cursor: default;}         /*Arrow cursor*/
+    .oh {overflow: hidden;}         /*Hide overflow*/
+    .anchor {                       /*For an achor point*/
+      height: 0px;
+      overflow: hidden;
+    }
+    h1 {
+      text-align: center;
+      color: #3CB531;
+    }
+    ul {
+      list-style-image: url(bullet.svg);
+    }
+    .topic {
+      margin: 10px;
+      border: 2px solid #CCF7C8;
+      background-color: #eeffe9;
+      padding: 0 15px;
+      overflow: auto;
+    }
+    .image {
+      cursor: pointer;
+      transition:box-shadow .3s ease-out;
+      z-index: 1;
+      position: relative;
+      background-color: white;
+      margin-bottom: 5px;
+    }
+    .image.r {
+      margin-left: 10px;
+      float: right;
+    }
+    .image.l {
+      margin-right: 10px;
+      float: left;
+    }
+    .image.n {
+      clear: both;
+    }
+    .image:hover {
+      box-shadow: 0 0 20px rgba(1,1,1,.4);
+      z-index: 2;
+    }
+    #floater {
+      position: fixed;
+      display: none;
+      z-index: 99;
+      background-color: white;
+    }
+    #floater.moving {
+      transition: top .6s ease, left .6s ease, width .6s ease, height .6s ease;
+    }
+
+    /*Specific*/
+    #nav {
+      background-color: #3CB531;
+      width: 100%;
+      position: fixed;
+      -webkit-flex-direction: row;
+      flex-direction: row;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      top: 0;
+      left: 0;
+      color: white;
+      padding: 5px 7px 0;
+      z-index: 90;
+    }
+      #nav > div {
+        display: block;
+        line-height: 40px;
+        white-space: nowrap;
+      }
+      #nav > .a {
+        font-size: 36px;
+        transform: translate(0,-3px);
+      }
+      #nav > .b {
+        font-size: 24px;
+        display: -webkit-flex;
+        display: flex;
+      }
+      .c {
+        height: 24px;
+        overflow-y: visible;
+        margin: 8px;
+        margin-right: 0;
+      }
+      #jumpto {
+        box-sizing: border-box;
+        height: 24px;
+        overflow-y: hidden;
+        border:1px solid white;
+        background-color: #E3F7E1;
+        border-radius: 4px;
+        line-height: 1;
+        font-size: 20px;
+        color: black;
+        padding: 0 2px;
+        transition: height ease-out .2s, border ease-out .2s, transform .05s ease-out, box-shadow .1s ease-out;
+      }
+        #jumpto:hover:not(.b) {
+          transform: scale(1.02);
+        }
+        #jumpto:hover {
+          box-shadow: 0 0 20px rgba(1,1,1,.4);
+        }
+        #jumpto.a, #jumpto:active {
+          transform: scale(.97);
+        }
+        #jumpto .arrow path {
+          transform: scale(1);
+          transition: transform .2s ease-out;
+        }
+      #jumpto.b {
+        border-color: black;
+      }
+        #jumpto.b .arrow path {
+          transform: scale(1,-1) translate(0,-24px);
+        }
+      #jumpcont {
+        overflow-x: hidden;
+      }
+      #jumpdisp {
+        margin-left: 3px;
+        -webkit-flex: 1;
+        flex: 1;
+      }
+      #jumpdispcont {
+        display: -webkit-flex;
+        display: flex;
+        width: 100%;
+      }
+      #nav > .e {
+        -webkit-flex-grow: 1;
+        flex-grow: 1;
+      }
+      #nav > .f {
+        font-size: 24px;
+        position: absolute;
+        top: 5px;
+        right: 20px;
+      }
+      #nav .g {
+        padding: 4px 0;
+        margin-left: 3px;
+        cursor: pointer;
+      }
+        #nav .g:hover {
+          background-color: #CCF7C8;
+        }
+      #nav .o:hover {
+        background-color: #CCF7C8;
+      }
+    #page {
+      margin-top: 63px;
+    }
+  </style>
+</head>
+<body>
+  <div id="bg" style="position: fixed; display: none; opacity: 0; background-color: black; width: 100%; height: 100%; z-index: 98; top: 0; left: 0; transition: opacity .6s ease-out;"></div>
+  <div id="nav" class="u cur">
+    <div class="a">Volcanoes and Plate Motion</div>
+    <div class="vl w b"></div>
+    <div class="b">Jump to:
+      <div class="c">
+        <div id="jumpto">
+          <div id="jumpcont">
+            <div id="jumpdispcont" class="o sel">
+              <div id="jumpdisp" role="d"></div>
+              <svg class="arrow" width="24" height="24">
+                <path style="fill:none;stroke:#3cb531;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" d="m 4,8 8,8 8,-8"/>
+              </svg>
+            </div>
+            <div class="hl f s" style="margin-top: 0;"></div>
+            <div class="g" marker="define">What is Plate Tectonics?</div>
+            <div class="g" marker="drive">Driving Plate Motion</div>
+            <div class="g" marker="boundaries">Plate Boundaries</div>
+            <div class="g" marker="faults">Faults</div>
+            <div class="g" marker="creation">Land Creation</div>
+            <div class="g" marker="volcanoes">Volcanoes</div>
+            <div class="g" marker="sources">Sources</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="e"></div>
+    <div class="vl w b"></div>
+    <div class="f" id="author">By Dakota Sullivan</div>
+  </div>
+  <div id="page">
+    <div id="define" class="anchor">What is Plate Tectonics?</div>
+    <div class="topic">
+      <h1>What is Plate Tectonics?</h1>
+      <img class="image l" style="height: 200px;" src="http://www.trendleaks.com/wp-content/uploads/2013/01/cracked-dirt-texture-01.jpg" alt="Dirt Texture" />
+      <img style="height: 260px;" src="http://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Earthquake_wave_paths.svg/922px-Earthquake_wave_paths.svg.png" alt="How Seismic Waves echo throughout the earth" class="image l n" />
+      <img style="height: 250px;" src="http://upload.wikimedia.org/wikipedia/commons/a/a6/Seismogram.gif" alt="S-Waves and P-Waves on a Seismogram" class="image r" />
+      <p>
+        The earth is made of layers: the crust, upper mantle, lower mantle, outer core, and inner core.
+        The lithosphere, which is made up of the crust and upper mantle, is like dried dirt, it has broken and seperated into plates.
+        These plates are called <strong>Tectonic Plates</strong>, or also <strong>Lithospheric Plates</strong>.
+        The name "Tectonic Plate" comes from the Ancient Greek word "Tektonikos" which means "pertaining to building."
+        There are two types of Tectonic Plates: Oceanic Plates, and Continental Plates.
+        An Oceanic Plate is usually half as thick as a continental plate, and is continually spreading because of Sea Floor Spreading.
+      </p>
+      <p>
+        Scientists discovered the layers of the earth by using earthquakes.
+        When an earthquake occurs, it sends a <strong>Seismic Wave</strong> throughout the earth.
+        Because one of these waves will be traveling through multiple materials and reflect off of others, the wave is split into different types.
+        These different types of waves following an earthquake proved the existance of the Earth's core, and other layers as well.
+        The most important Seismic Waves are the <strong>P-Waves</strong> and <strong>S-Waves</strong>.
+        A P-Wave is a "primary" wave, which is the most powerful and will move through all materials, including air as a sound wave.
+        An S-Wave is a "secondary" wave, which travel at about 3/5 the speed of a P-Wave, and can only travel through solids.
+        The difference in speed between these waves allow us to triangulate the position of the source of the quake.
+      </p>
+    </div>
+    <div class="topic">
+      <div id="drive" class="anchor">Driving Plate Motion</div>
+      <h1>What Drives Plate Motion?</h1>
+      <p>
+        Tectonic plates move with the <strong>Convection Currents</strong> in the mantle.
+        Because the center of the earth is so hot, the mantle acts similar to a liquid in some ways.
+        The center of the earth heats up the nearest mantle, which being less dense, tends to rise to the top.
+        This forces the colder mantle on the top to sink, creating a circular motion.
+        Because the hot mantle that just moved up is now away from the heat, it cools and falls back down continuing the cycle.
+      </p>
+    </div>
+    <div class="topic">
+      <div id="boundaries" class="anchor">Plate Boundaries</div>
+      <h1>Plate Boundaries</h1>
+      <img style="height: 420px;" src="http://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Plates_tect2_en.svg/1280px-Plates_tect2_en.svg.png" alt="Tectonic Plates" class="image r" />
+      <img style="height: 300px;" src="http://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Cross_section_of_mariana_trench.svg/2000px-Cross_section_of_mariana_trench.svg.png" alt="Mariana Trench" class="image r n" />
+      <img style="height: 320px;" src="http://www.geol.umd.edu/~piccoli/100/Image185.jpg" alt="Mid-Ocean Ridge" class="image r n">
+      <p>
+        There are these giant plates around the world named because they build, but what do they build?
+        Because these plates are moving and seperate from each other, they create boundaries.
+        There are three types of boundaries, <strong>Convergent Boundaries</strong>, <strong>Divergent Boundaries</strong>, and <strong>Transform Boundaries</strong>, and all of these can cause earthquakes.
+        <ul>
+          <li>
+            <h2>Convergent Boundaries</h2>
+            <p>
+              This is where two Tectonic Plates are pushing towards each other.
+              On the map of Tectonic Plates, the Pacific Plate has these boundaries on the left edge.
+              When an Oceanic Plate and a Continental Plate collide in this fashion, the Oceanic Plate, being thinner, will be pushed under the Continental Plate.
+              With any Convergent Boundary, one plate is bound to <strong>subduct</strong> beneath the other, or be pushed under.
+              A subducting plate will pull some extra ground underneath with it, creating a trench.
+            </p>
+            <p>
+              If two Continental Plates collide, you get something like the Himalayas.
+              The Himalayas were formed because the Indian Plate slammed into the Eurasian Plate at a relatively high speed, forcing the land up.
+              Another more local example would be the Rocky Mountains.
+              There is even Precambrian Metamorphic rock in these mountians, showing that the rock there was formed before it was lifted up by compression of the North American Plate.
+            </p>
+            <p>
+              This type of boundary can cause earthquakes, faults, volcanoes, and trenches.
+              When one plate subducts another, that plate will be melted under the other one, causing molten rock to rise through the crust and create land and volcanoes.
+              A good example of this is the Mariana Trench.
+              The subducting plate melts and creates the Alamagan Island.
+            </p>
+          </li>
+          <li>
+            <h2>Divergent Boundaries</h2>
+            <p>
+              This is where two Tectonic plates are pulling away from each other.
+              The Pacific Plate also has this type of boundary on the right side with the Nazca Plate and Antartic Plate.
+              With this type of boundary there is no significant difference when between an Oceanic and a Continental Plate.
+            </p>
+            <p>
+              An example of this boundary is the <strong>Mid-Atlantic Ridge</strong>.
+              This is a huge split right down the middle of the Atlantic Ocean and through Iceland made from Divergent Boundaries.
+              This is what created the Atlantic Ocean and still creates the Oceanic Plates on either side.
+            </p>
+            <p>
+              Divergent Boundaries can also cause earthquakes and faults, along with abysses, ridges, and hydrothermal vents.
+              The image depicting a Divergent Boundary also shows how faults, ridges, and hydrothermal vents can form.
+              To create an abyss a Divergent Boundary has to have less magma rising up, so that the gap in between is not completely filled.
+              Abysses are more common in Continental Plates, while ridges and hydrothermal vents are more common in Oceanic Plates.
+            </p>
+          </li>
+          <li>
+            <h2>Transverse Boundaries</h2>
+            <p>
+              A Transverse Boundary is formed when two Tectonic Plates are rubbing against each other tangential to earth (horizontally).
+              There are very few instances of this type of boundary, and the most obvious one is between the Pacific Plate and the North American Plate against California.
+              This type of boundary is usually quickly forming and does not create nor destroy land.
+            </p>
+          </li>
+        </ul>
+      </p>
+    </div>
+    <div class="topic">
+      <div id="faults" class="anchor">Faults</div>
+      <h1>Faults</h1>
+      <p>
+        There are three basic types of faults: <strong>Strike-Slip</strong>, <strong>Dip-Slip</strong>, and <strong>Oblique-Slip</strong>.
+        <ul>
+          <li>
+            <h2>Strike-Slip Fault</h2>
+            <p>
+              This is where two land masses quickly break apart and slide against each other horizontally.
+              Transform Boundaries are a type of Strike-Slip Fault.
+              The only difference being that a Transform Boundary goes through the entire Lithosphere, while a Strike-Slip fault does not have to.
+            </p>
+          </li>
+          <li>
+            <h2>Dip-Slip Fault</h2>
+            <p>
+              This type of fault is the most common, and for it to occur, the fault plane cannot be vertical.
+              In a Dip-Slip Fault, the two land masses on either side get names: <strong>Hangingwall</strong> and <strong>Footwall</strong>.
+              The Footwall is the land mass that is beneath the fault plane while the Hangingwall is above.
+            </p>
+            <p>
+              There are two different versions of a Dip-Slip Fault: a <strong>Normal Fault</strong> and a <strong>Reverse Fault</strong>.
+              A normal fault is where the Hangingwall and the Footwall pull apart so the Footwall rises above the Hangingwall.
+              This is usually caused by the crust extending, pulling the rock apart.
+              A reverse fault is naturally the inverse, where the Hangingwall and the Footwall push together so the Footwall is pushed below the Hangingwall.
+              This is usually caused by the crust shortening instead, pushing the rock together.
+            </p>
+          </li>
+          <li>
+            <h2>Oblique-Slip Fault</h2>
+            <p>
+              An Oblique-Slip Fault is just the combination of a Strike-Slip Fault and a Dip-Slip Fault, so the Hangingwall moves across and against or away from the Footwall.
+            </p>
+          </li>
+        </ul>
+      </p>
+    </div>
+    <div class="topic">
+      <div id="creation" class="anchor">Land Creation</div>
+      <h1>Land Creation</h1>
+      <img style="height: 300px;" src="http://upload.wikimedia.org/wikipedia/commons/c/cd/Partial_melting_asthenosphere_EN.svg" alt="How land is created" class="image l">
+      <p>
+        There are three different ways that Crust is formed.
+        If there is a Convergent Boundary, the subducting plate will melt and rise to create new volcanic land.
+        This is also shown above with the Mariana Trench.
+        If there is a Divergent Boundary, magma will rise up to fill the gap, creating land between the spreading.
+        This spreading usually occurs in the sea, and is called Sea Floor Spreading.
+        If there is a Hot Spot underneath a plate, magma will rise through the plate slowly creating volcanic land as well.
+        Hawaii is still being created by this process because the Pacific Plate is moving over a Hot Spot, creating a chain of islands.
+        Because land is always being created as long as this planet recieves enough energy (ie. from the Sun), our landforms will continually change over time.
+        This will occur quickly if we have a Super Volcano erupt, changing the global climate in days.
+      </p>
+    </div>
+    <div class="topic">
+      <div id="volcanoes" class="anchor">Volcanoes</div>
+      <h1>Volcanoes</h1>
+      <img style="height: 300px;" src="http://gisandes.brgm.fr/images/volcanism/volctype.gif" alt="Types of Volcanoes" class="image r" />
+      <p>
+        Volcanoes form where new land does, meaning that Hot Spots, Convergent Boundaries, and Divergent Boundaries all form volcanoes.
+        There are four basic types of volcanoes: <strong>Stratovolcanoes</strong>, <strong>Shield Volcanoes</strong>, <strong>Cinder Cones</strong>, and <strong>Calderas</strong>.
+        <ul>
+          <li>
+            <h2>Stratovolcano</h2>
+            <p>
+              This is the most iconic type of volcano and the most common.
+              This type is sometimes also called a <strong>Composite Volcano</strong> because it is made of many layers.
+              These volcanoes form most often because of Convergent Boundaries when the magma bubbles up.
+              Stratovolcanoes more often have steeper slopes and periodic eruptions, but any lava that comes out is usually quite viscous.
+              The steep slope is caused by the viscous lava because it cools before it moves too far.
+              When a Stratovolcano erupts explosively it will create a <strong>Pyroclastic Flow</strong>, or dense cloud of hot gas and rock, which will bury everything it passes with heavy ash and rock.
+              Anything in a Pyroclastic Flow's path will be immediately incinerated.
+            </p>
+          </li>
+          <li>
+            <h2>Sheild Volcano</h2>
+            <p>
+              This type usually formes over Hot Spots and Divergent Boundaries, like Hawaii or Iceland.
+              A Shield Volcano is, as the name describes, more flat because it erupts more fluid lava, which flows further than Stratovolcano lava.
+              This lava can be so liquid in fact that it can form a lava fountain, which can be observed on Kilauea.
+              Most Shield Volcanoes are usually very large and wide, otherwise we would not be able to recognize them.
+              These usually cannot create a Pyrocastic Flow because the magma inside is not viscous enough.
+            </p>
+          </li>
+          <li>
+            <h2>Cinder Cone</h2>
+            <p>
+              These volcanoes are usually small conical piles of loose rock formed by eruptions or lava fountains by a single vent.
+              While the erupted lava is blown into the air, it solidifies into small fragments usually called Cinders, hence the name Cinder Cone.
+              It is basically a vent that opened up and piled up ejected rock into a hill.
+              They can create Pyroclastic Flows, but they are usually very small and actually help form the cone.
+              This type of volcano usually formes on the edges of other Shield Volcanoes or Stratovolcanoes.
+              For example, there are nearly 100 Cinder Kones on Mauna Kea, a Shield Volcano located on Hawaii.
+            </p>
+          </li>
+          <li>
+            <h2>Caldera</h2>
+            <p>
+              This is basically a reborn volcano.
+              A Caldera can only form withing the dome of an old volcano, and are pools of magma beneath the original vent.
+              Yellowstone is a giant Caldera volcano, to the size that it has sometimes been called a Super Volcano, just meaning that it is large enough to coat the entire world with ash.
+            </p>
+          </li>
+        </ul>
+      </p>
+    </div>
+    <div class="topic">
+      <div id="sources" class="anchor">Sources</div>
+      <h1>Sources</h1>
+      <ul>
+        <li>Wikipedia (<a href="http://en.wikipedia.org/wiki/Plate_tectonics">Plate Tectonics</a>, <a href="http://en.wikipedia.org/wiki/Rocky_Mountains">Rocky Mountains</a>, <a href="http://en.wikipedia.org/wiki/Fault_(geology)">Fault</a>, <a href="http://en.wikipedia.org/wiki/Seismic_wave">Seismic Wave</a>, <a href="http://en.wikipedia.org/wiki/Volcanoes">Volcanoes</a>)</li>
+        <li>Penn State University (<a href="http://eqseis.geosc.psu.edu/~cammon/HTML/Classes/IntroQuakes/notes/waves_and_interior.html">Seismic Waves and Earth's Interior</a>)</li>
+      </ul>
+      <h1>Images</h1>
+      <ul>
+        <li>Cracked Mud: <a href="http://www.trendleaks.com/2013/01/dirt-texture/">Dirt Texture Showcase</a></li>
+        <li>Seismogram: <a href="http://en.wikipedia.org/wiki/File:Seismogram.gif">Seismogram.gif</a></li>
+        <li>Seismic Wave Types: <a href="http://en.wikipedia.org/wiki/File:Earthquake_wave_paths.svg">Earthquake_wave_paths.svg</a></li>
+        <li>Plates: <a href="http://commons.wikimedia.org/wiki/File:Plates_tect2_en.svg">Plates_tect2_en.svg</a></li>
+        <li>Mariana Trench Cross Section: <a href="http://commons.wikimedia.org/wiki/File:Cross_section_of_mariana_trench.svg">Cross_section_of_mariana_trench.svg</a></li>
+        <li>Sea Floor Spreading: <a href="http://www.geol.umd.edu/~piccoli/100/CH19.htm">Divergent Boundaries</a></li>
+        <li>Creating Land: <a href="http://commons.wikimedia.org/wiki/File:Partial_melting_asthenosphere_EN.svg">Partial_melting_asthenosphere_EN.svg</a></li>
+        <li>Types of Volcanoes: <a href="http://gisandes.brgm.fr/gis_volcanism2.htm">Volcanism Data Elements</a></li>
+      </ul>
+    </div>
+  </div>
+  <img id="floater"/>
+  <script>ready();</script>
+</body>
+</html>
