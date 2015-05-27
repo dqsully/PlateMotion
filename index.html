@@ -90,8 +90,8 @@
         var tmp;
         var it;
         for(var i=0; i<ems.length; i++) {
-          tmp = Math.abs(ty - y(ems[i]));
-          if(tmp < min) {
+          tmp = ty - y(ems[i]);
+          if(tmp < min && tmp >= 0) {
             min = tmp;
             it = ems[i];
           }
